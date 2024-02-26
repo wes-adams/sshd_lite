@@ -175,7 +175,7 @@ class Client:
         if self.state == 'handshake':
             msg = bytearray(HS1_C2S_MESSAGE)
             seq = self.sequence.to_bytes(1, 'big')
-            cmd = 0x00 | 0x80
+            cmd = 0x00
             cmd = cmd.to_bytes(1, 'big')
             msg = (seq + cmd + msg)
             print(f'client || data out :: {msg}')
