@@ -224,7 +224,7 @@ class Client:
             print(f'client || data in :: {data}')
             print(f'          seq :: {seq}')
             print(f'          cmd :: {cmd}')
-            print(f'          payload :: {payload}')
+            print(f'          payload :: {payload}   <---- should be decrypted into the same message that was sent') 
             if payload == b'hello':
                 print("good key exchange and encryption")
 
