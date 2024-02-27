@@ -177,6 +177,10 @@ class Client:
 
             data = self.client_socket.recv(1024)
             seq, cmd, payload = self.parse_data(data)
+            print(BLUE + f'client || data in :: {data}' + END)
+            print(BLUE + f'          seq :: {seq}' + END)
+            print(BLUE + f'          cmd :: {cmd}' + END)
+            print(BLUE + f'          payload :: {payload}' + END)
 
             if payload == HS1_S2C_MESSAGE:
                 self.state = 'exchange_key'
