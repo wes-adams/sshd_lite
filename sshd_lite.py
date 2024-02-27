@@ -19,6 +19,11 @@ TEST_CRYPTO = 2
 ENCRYPTED_MSG = 3
 
 
+RED = '\u001b[31m'
+BLUE = '\u001b[34m'
+END = '\u001b[0m'
+
+
 class Server:
     def __init__(self):
         self.rx_fifo = queue.Queue()
@@ -65,7 +70,7 @@ class Server:
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind((HOST, PORT))
         self.server_socket.listen()
-        print(f"Server listening on {HOST}:{PORT}")
+        print(RED + f"Server listening on {HOST}:{PORT}" + END)
 
         while True:
             conn, addr = self.server_socket.accept()
@@ -81,16 +86,16 @@ class Server:
             data = conn.recv(1024)
             if not data:
                 break
+            print(RED + f'server || data in :: {data}' + END)
             self.rx_fifo.put(data)
 
     def server_rx_fifo_get_thread(self):
         while True:
             data = self.rx_fifo.get()
             seq, cmd, payload = self.parse_data(data)
-            print(f'server || data in :: {data}')
-            print(f'          seq :: {seq}')
-            print(f'          cmd :: {cmd}')
-            print(f'          payload :: {payload}')
+            print(RED + f'          seq :: {seq}' + END)
+            print(RED + f'          cmd :: {cmd}' + END)
+            print(RED + f'          payload :: {payload}' + END)
 
             if payload == HS1_C2S_MESSAGE:
                 msg = bytearray(HS1_S2C_MESSAGE)
@@ -117,7 +122,7 @@ class Server:
     def server_send_thread(self, conn, addr):
         while True:
             data = self.tx_fifo.get()
-            print(f'server || data out :: {data}')
+            print(RED + f'server || data out :: {data}' + END)
             conn.sendall(data)
 
 
@@ -161,16 +166,6 @@ class Client:
         payload = data[2:]
         return (sequence, cmd, payload)
 
-    def client_recv_thread():
-        while True:
-            data = self.client_socket.recv(1024)
-            if not data:
-                break
-            self.fifo.put(data)
-
-    def client_send_thread():
-        pass
-
     def client_thread(self):
         if self.state == 'handshake':
             msg = bytearray(HS1_C2S_MESSAGE)
@@ -178,19 +173,14 @@ class Client:
             cmd = 0x00
             cmd = cmd.to_bytes(1, 'big')
             msg = (seq + cmd + msg)
-            print(f'client || data out :: {msg}')
             self.client_socket.sendall(msg)
 
             data = self.client_socket.recv(1024)
             seq, cmd, payload = self.parse_data(data)
-            print(f'client || data in :: {data}')
-            print(f'          seq :: {seq}')
-            print(f'          cmd :: {cmd}')
-            print(f'          payload :: {payload}')
 
             if payload == HS1_S2C_MESSAGE:
                 self.state = 'exchange_key'
-                print("client: handshake > exchange_key")
+                print(BLUE + "client: handshake > exchange_key" + END)
                 self.sequence += 1
 
         if self.state == 'exchange_key':
@@ -198,18 +188,17 @@ class Client:
             cmd = KEY_EXCHANGE.to_bytes(1, 'big')
             payload = self.pub
             msg = (seq + cmd + payload)
-            print(f'client || data out :: {msg}')
             self.client_socket.sendall(msg)
             data = self.client_socket.recv(1024)
             seq, cmd, payload = self.parse_data(data)
-            print(f'client || data in :: {data}')
-            print(f'          seq :: {seq}')
-            print(f'          cmd :: {cmd}')
-            print(f'          payload :: {payload}')
+            print(BLUE + f'client || data in :: {data}' + END)
+            print(BLUE + f'          seq :: {seq}' + END)
+            print(BLUE + f'          cmd :: {cmd}' + END)
+            print(BLUE + f'          payload :: {payload}' + END)
             self.state = 'test_encryption'
             self.server_pub = payload
-            print(f'client || pub :: {self.server_pub}')
-            print("client: exchange_key > test_encryption")
+            print(BLUE + f'client || pub :: {self.server_pub}' + END)
+            print(BLUE + "client: exchange_key > test_encryption" + END)
             self.sequence += 1
 
         if self.state == 'test_encryption':
@@ -217,16 +206,15 @@ class Client:
             cmd = TEST_CRYPTO .to_bytes(1, 'big')
             payload = self.encrypt_byte_array(b'hello')
             msg = (seq + cmd + payload)
-            print(f'client || data out :: {msg}')
             self.client_socket.sendall(msg)
             data = self.client_socket.recv(1024)
             seq, cmd, payload = self.parse_data(data)
-            print(f'client || data in :: {data}')
-            print(f'          seq :: {seq}')
-            print(f'          cmd :: {cmd}')
-            print(f'          payload :: {payload}   <---- should be decrypted into the same message that was sent') 
+            print(BLUE + f'client || data in :: {data}' + END)
+            print(BLUE + f'          seq :: {seq}' + END)
+            print(BLUE + f'          cmd :: {cmd}' + END)
+            print(BLUE + f'          payload :: {payload}   <---- should be decrypted into the same message that was sent' + END)
             if payload == b'hello':
-                print("good key exchange and encryption")
+                print(BLUE + "good key exchange and encryption" + END)
 
     def start_connection(self):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -253,7 +241,6 @@ def main():
         target=run_thread_2, args=())
 
     thread_1.start()
-    time.sleep(1)
     thread_2.start()
 
     thread_1.join()
